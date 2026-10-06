@@ -36,7 +36,7 @@ main{display:grid;grid-template-columns:minmax(260px,320px) 1fr;gap:16px;padding
 </style></head><body>
 <header>
  <div><h1>Formación de grupos</h1><div class="sub" id="stat"></div><div class="sub">Grupos de 2 a 5 integrantes · cada persona en un solo grupo · arrastra o toca un nombre y luego un grupo</div></div>
- <div><button id="add">+ Nuevo grupo</button> <button class="g" id="copy">Copiar resumen</button> <button class="g" id="reset">Reiniciar</button></div>
+ <div><button id="add">+ Nuevo grupo</button> <button class="g" id="copy">Copiar resumen</button> <button class="g" id="fsave">Guardar archivo</button> <button class="g" id="fload">Cargar archivo</button><input type="file" id="file" accept=".json,application/json" hidden> <button class="g" id="reset">Reiniciar</button></div>
 </header>
 <main>
  <section class="pool" id="pool"><b>Sin grupo</b> <span class="sub" id="pc"></span>
@@ -222,5 +222,22 @@ $("copy").onclick=()=>{
  const t=G.map(g=>`${g.name} (${g.m.length})\n`+g.m.map(i=>"  - "+byId[i].n).join("\n")).join("\n\n");
  const bad=G.filter(g=>g.m.length===1).length;
  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(bad?"Copiado (hay grupos con 1 integrante)":"Resumen copiado"),()=>toast("No se pudo copiar"))};
+$("fsave").onclick=()=>{
+ const data={version:1,saved:new Date().toISOString(),groups:G.map(g=>({name:g.name,members:g.m.map(i=>({id:i,name:byId[i].n}))}))};
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+ a.download="grupos.json";document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast("Archivo grupos.json guardado")};
+$("fload").onclick=()=>$("file").click();
+$("file").onchange=e=>{
+ const f=e.target.files[0];e.target.value="";if(!f)return;
+ const r=new FileReader();
+ r.onload=()=>{try{
+  const d=JSON.parse(r.result);if(!d||!Array.isArray(d.groups))throw 0;
+  const used=new Set();
+  G=d.groups.map((g,i)=>({name:String(g.name||`Grupo ${i+1}`),m:(Array.isArray(g.members)?g.members:[]).map(x=>String(x&&x.id!=null?x.id:x)).filter(id=>byId[id]&&!used.has(id)&&used.add(id)).slice(0,MAX)}));
+  sel=null;save();render();toast("Archivo cargado")
+ }catch(err){toast("Archivo no válido")}};
+ r.readAsText(f)};
 render();
 </script></body></html>
