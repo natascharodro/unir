@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Formación de grupos</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mu:#6b7385;--bd:#dde1ea;--ac:#3b5bdb;--ok:#2b9a5b;--wa:#d9822b;--er:#d64545;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171f;--card:#1e222d;--tx:#e8ebf2;--mu:#98a0b3;--bd:#323848;--ac:#7b93ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,Segoe UI,Roboto,sans-serif}
+header{padding:16px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{font-size:20px;margin:0}
+.sub{color:var(--mu);font-size:13px}
+button{font:inherit;background:var(--ac);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+button.g{background:transparent;color:var(--mu);border:1px solid var(--bd)}
+main{display:grid;grid-template-columns:minmax(260px,320px) 1fr;gap:16px;padding:0 20px 24px}
+@media(max-width:760px){main{grid-template-columns:1fr}}
+.pool{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;align-self:start;position:sticky;top:8px}
+.pool input{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);margin:8px 0}
+.list{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto;min-height:48px}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;align-content:start}
+.grp{background:var(--card);border:2px solid var(--bd);border-radius:12px;padding:10px;min-height:140px}
+.grp.over{border-color:var(--ac)}.grp.full{border-color:var(--ok)}.grp.bad{border-color:var(--wa)}
+.gh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px}
+.gh input{font:inherit;font-weight:600;border:0;background:transparent;color:var(--tx);width:100%;min-width:0}
+.badge{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--bg);color:var(--mu);white-space:nowrap}
+.grp.bad .badge{color:var(--wa)}.grp.full .badge{color:var(--ok)}
+.chip{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 8px;cursor:grab;user-select:none;margin-bottom:6px;font-size:14px}
+.pool .chip{margin:0}
+.chip.sel{outline:2px solid var(--ac)}.chip.drag{opacity:.4}
+.chip a{color:var(--mu);text-decoration:none;font-size:12px}
+.chip x{cursor:pointer;color:var(--er);padding:0 4px}
+.empty{color:var(--mu);font-size:13px;text-align:center;padding:14px 0}
+.x{background:none;border:0;color:var(--mu);padding:2px 6px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:8px 14px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none}
+#toast.on{opacity:1}
+</style></head><body>
+<header>
+ <div><h1>Formación de grupos</h1><div class="sub" id="stat"></div><div class="sub">Grupos de 2 a 5 integrantes · cada persona en un solo grupo · arrastra o toca un nombre y luego un grupo</div></div>
+ <div><button id="add">+ Nuevo grupo</button> <button class="g" id="copy">Copiar resumen</button> <button class="g" id="reset">Reiniciar</button></div>
+</header>
+<main>
+ <section class="pool" id="pool"><b>Sin grupo</b> <span class="sub" id="pc"></span>
+  <input id="q" placeholder="Buscar nombre…"><div class="list" id="plist"></div></section>
+ <section class="groups" id="groups"></section>
+</main>
+<div id="toast"></div>
+<script>
+const RAW=`Juan Emilio Abreu Martinez|179451
+Yalimar Agudelo Perez|179726
+Christy Saires Aguero Valverde|149871
+Gabriel Felipe Aguilar Barrera|176271
+John Fabio Aguilar Sánchez|180824
+Henry Winter Aguirre Reyes|178087
+Paul Christian Alvarado Bustos|179186
+Luis Alberto Alvarez Barbosa|176502
+Nicolas Alvarino Laguna|177603
+Libardo Adolfo Amesquita Ortega|181678
+Ana del Carmen Carolina Angel Cepeda|176968
+Juan Carlos Aravena Saez|178657
+Luis Mauricio Ardila Vargas|179517
+Juan Esteban Astaiza Fuenmayor|176029
+Juan Carlos Baquero Caita|176269
+Josué Roberto Barahona Martínez|178855
+Marcela Dayan Barahona Ortiz|178944
+Christian Eduardo Barillas Ordoñez|176579
+Eduar Andrés Baron Espitia|181364
+Dorany Beltrán Herrera|180804
+Liset Johana Bernal Ramirez|76540
+Sara Alejandra Bolaños Nuñez|179443
+Mario Geovanny Campos Miranda|181446
+Sergio Alejandro Cano Salerno|177105
+Gabriel Oswaldo Cárcamo Aravena|180792
+Samuel David Castro Rodríguez|177830
+Jeziel Andery Castro Teran|154600
+Josué Isacc Cepeda Suarez|177388
+Juan Jose Chabkinian Jorge|181214
+Juliana Chantre Astudillo|178081
+Washington Edgar Condori Mamani|152808
+Verónica Carolina Contreras De Abreu|177982
+Gustavo Adolfo Cruz Daza|178839
+Jose Miguel Cuas Payano|179320
+Eduardo Miguel De la Hoz Correa|176736
+Miguel José del Valle Porcarello|180173
+Rosemberg Daniel Diaz Mendez|177101
+Juan Manuel Diaz Romero|178653
+Astrid Stephanie Duron Osorto|178984
+Rolando Arturo Duverge Urbaez|177555
+Javier Orlando Fernández Campos|175893
+Omar Ricardo Figueroa Molano|176795
+Carlos Javier Flores Kanter|180986
+Gustavo Andrés Galarza Arica|177845
+Daniel Alberto Galindo Varela|179735
+Marelis del Carmen Genes Diaz|134810
+Jean Carlo Gómez Ponce|175717
+Norman Giovanni Gomez Rivas|176188
+Aylin Mercedes Góngora Gutierrez|177988
+Johan Manuel González Castro|176591
+Juan Alejandro Huertas Alzate|179644
+Hans Manuel Luna Zambrano|177154
+Edgar Nicolas Mancera Bello|135318
+Marco Jose Manosalva Navarro|178258
+Patricio Antonio Marré Reygada|176132
+John Heiller Martinez Cubillos|181175
+Jorge Gianfranco Medina Advíncula|132525
+Miyen Deysi Mego Ramirez|178996
+Elmer Onicer Montenegro Velasco|178475
+María Virginia Montes Peñafort|180337
+Cesar Augusto Montoya Gonzalez|176969
+Silvia Massiel Moreno Rivas|175806
+Santiago Mosquera Erazo|179840
+Carlos Andres Muñoz Martinez|181355
+Alejandra Leticia Ochoa Oviedo|178517
+Lenin Antonio Ortega Jimenez|176880
+Iker Andree Ortez Colindres|177949
+María del Pilar Otavo Serrano|178320
+Miguel Angel Paez Benavides|178297
+Brayan Estiben Palma Males|176098
+Lara Estefanía Parrucci|181001
+Nicolás Pavón Peláez|179953
+Oscar Fabian Peinado Cortez|180712
+Jonathan Leonel Pepe|178641
+David Paul Porras Cordova|176118
+Alejandro Enrique Portilla Zamora|175746
+Diego Fernando Prado Osorio|115956
+Miguel Angel Príncipe Miranda|135218
+Laura Pulido Diaz|179884
+Renzo Miguel Quispe Alvarez|176737
+Eder Guiovanny Ramírez Cely|179538
+Luis Mario Ramírez Peralta|179439
+Javier Camilo Ramírez Suesca|177377
+Victor Ramos Guanilo|177840
+Alberto Ramos Lopez|136310
+Christian Andrés Reyes Arellano|178929
+Sergio Stefano Reyes Pino|176119
+Reniery Saul Rodriguez|179868
+Eduardo Rodriguez Maysundo|175638
+Jorge Sebastián Rodríguez Mora|179339
+Natascha Rodriguez Roberts|178918
+Mauricio Maximiliano Roh|180709
+Rodrigo Alberto Roncancio Ocampo|179636
+Audric André Rosario Rosario|177079
+Leonardo Isaac Salgado Alean|180916
+Luys Ruben Santana Osorio|179944
+Claudio Martin Santos Garcia|177073
+Gustavo Seminario Paredes|176279
+Derik Alexander Seminario Cotto|180720
+Eddie Hansel Soto Castillo|179307
+Angela Andrea Suarez Arango|134829
+Jeasson Alfonso Suarez Sanchez|176596
+Jorge Samuel Tovar Flores|179004
+Josue Alejandro Trochez Lagos|179928
+Giancarlo Jair Urrutia Mendoza|155944
+Angel Yesid Vargas Ramirez|179802
+Francisco Vásquez Cuevas|179787
+Gonzalo Nicolas Alejandro Vega Mujica|178662
+Elvis Vergara Hernández|180024
+Manuel Gerardo Enrique Villareal Villamil|177906
+David Andres Yepes Ospina|180822
+Cristian Rodil Zuniga Cruz|177983
+Maximiliano Sebastian Zurita|176173`;
+const P=RAW.split("\n").map(l=>{const[n,id]=l.split("|");return{id,n}});
+const byId=Object.fromEntries(P.map(p=>[p.id,p]));
+const MIN=2,MAX=5,KEY="groups-v1";
+let G=[{name:"Grupo 1",m:[]},{name:"Grupo 2",m:[]},{name:"Grupo 3",m:[]}];
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s)&&s.every(g=>g&&Array.isArray(g.m)))G=s}catch(e){}
+// sanitize: unknown ids dropped, duplicates removed, max 5
+const seen=new Set();G.forEach(g=>{g.m=g.m.filter(i=>byId[i]&&!seen.has(i)&&seen.add(i)).slice(0,MAX)});
+let sel=null,drag=null;
+const $=s=>document.getElementById(s);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(G))}catch(e){}}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2200)}
+function chip(id,gi){
+ const p=byId[id],d=document.createElement("div");d.className="chip"+(sel===id?" sel":"");d.draggable=true;
+ const s=document.createElement("span");s.textContent=p.n;d.append(s);
+ const r=document.createElement("span");
+ const a=document.createElement("a");a.href=`https://campusonline.unir.net/user/view.php?id=${id}&course=16266`;a.target="_blank";a.rel="noopener";a.textContent="↗";a.title="Ver perfil";a.onclick=e=>e.stopPropagation();r.append(a);
+ if(gi!=null){const x=document.createElement("x");x.textContent="×";x.title="Quitar del grupo";x.onclick=e=>{e.stopPropagation();move(id,null)};r.append(x)}
+ d.append(r);
+ d.ondragstart=e=>{drag=id;d.classList.add("drag");e.dataTransfer.setData("text/plain",id);e.dataTransfer.effectAllowed="move"};
+ d.ondragend=()=>{drag=null;d.classList.remove("drag")};
+ d.onclick=()=>{sel=sel===id?null:id;render()};
+ return d}
+function move(id,gi){
+ if(gi!=null){const t=G[gi];if(t.m.includes(id))return;if(t.m.length>=MAX){toast(`${t.name} ya tiene ${MAX} integrantes`);return}}
+ G.forEach(g=>g.m=g.m.filter(i=>i!==id));
+ if(gi!=null)G[gi].m.push(id);
+ sel=null;save();render()}
+function render(){
+ const assigned=new Set(G.flatMap(g=>g.m)),q=$("q").value.toLowerCase();
+ const pl=$("plist");pl.innerHTML="";
+ const free=P.filter(p=>!assigned.has(p.id));
+ free.filter(p=>p.n.toLowerCase().includes(q)).forEach(p=>pl.append(chip(p.id,null)));
+ if(!pl.children.length){pl.innerHTML=`<div class="empty">${free.length?"Sin resultados":"Todos asignados 🎉"}</div>`}
+ $("pc").textContent=`(${free.length})`;
+ const bad=G.filter(g=>g.m.length===1).length;
+ $("stat").textContent=`${assigned.size}/${P.length} asignados · ${G.length} grupos`+(bad?` · ${bad} con un solo integrante`:"");
+ const gs=$("groups");gs.innerHTML="";
+ G.forEach((g,i)=>{
+  const n=g.m.length,el=document.createElement("div");
+  el.className="grp"+(n>=MAX?" full":n===1?" bad":"");
+  const h=document.createElement("div");h.className="gh";
+  const inp=document.createElement("input");inp.value=g.name;inp.onchange=()=>{g.name=inp.value||`Grupo ${i+1}`;save()};inp.onclick=e=>e.stopPropagation();
+  const b=document.createElement("span");b.className="badge";b.textContent=`${n}/${MAX}`+(n===1?" · mín. 2":"");
+  const del=document.createElement("button");del.className="x";del.textContent="🗑";del.title="Eliminar grupo";del.onclick=e=>{e.stopPropagation();G.splice(i,1);save();render()};
+  h.append(inp,b,del);el.append(h);
+  g.m.forEach(id=>el.append(chip(id,i)));
+  if(!n)el.insertAdjacentHTML("beforeend",'<div class="empty">Arrastra nombres aquí</div>');
+  el.ondragover=e=>{e.preventDefault();el.classList.add("over")};
+  el.ondragleave=()=>el.classList.remove("over");
+  el.ondrop=e=>{e.preventDefault();el.classList.remove("over");const id=e.dataTransfer.getData("text/plain")||drag;if(id&&byId[id])move(id,i)};
+  el.onclick=()=>{if(sel)move(sel,i)};
+  gs.append(el)});
+}
+const pool=$("pool");
+pool.ondragover=e=>e.preventDefault();
+pool.ondrop=e=>{e.preventDefault();const id=e.dataTransfer.getData("text/plain")||drag;if(id&&byId[id])move(id,null)};
+pool.onclick=e=>{if(sel&&e.target===pool)move(sel,null)};
+$("q").oninput=render;
+$("add").onclick=()=>{G.push({name:`Grupo ${G.length+1}`,m:[]});save();render()};
+$("reset").onclick=()=>{if(confirm("¿Quitar a todos de sus grupos?")){G.forEach(g=>g.m=[]);save();render()}};
+$("copy").onclick=()=>{
+ const t=G.map(g=>`${g.name} (${g.m.length})\n`+g.m.map(i=>"  - "+byId[i].n).join("\n")).join("\n\n");
+ const bad=G.filter(g=>g.m.length===1).length;
+ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(bad?"Copiado (hay grupos con 1 integrante)":"Resumen copiado"),()=>toast("No se pudo copiar"))};
+render();
+</script></body></html>
